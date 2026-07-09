@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Admin Panel</h2>
+        <nav>
+          <a class="active" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+          <a href="{{ url_for('sales_page') }}">Sale</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('customers_page') }}">Customer</a>
+          <a href="{{ url_for('suppliers_page') }}">Supplier</a>
+          <a href="{{ url_for('categories_page') }}">Category</a>
+          <a href="{{ url_for('products_page') }}">Products</a>
+          <a href="{{ url_for('invoices_page') }}">Invoices</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+          <a href="{{ url_for('salaries_page') }}">Salary</a>
+          <a href="{{ url_for('reports_page') }}">Reports</a>
+          <a href="{{ url_for('ledger_page') }}">Ledger</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Admin Dashboard</h1>
+            <p>Full access to inventory, purchases, sales, and reports.</p>
+          </div>
+        </header>
+
+        <section class="summary-grid">
+          <article class="card">
+            <h3>Total Purchases</h3>
+            <p>{{ "%.2f"|format(summary.total_purchases) }}</p>
+          </article>
+          <article class="card">
+            <h3>Total Sales</h3>
+            <p>{{ "%.2f"|format(summary.total_sales) }}</p>
+          </article>
+          <article class="card">
+            <h3>Profit</h3>
+            <p>{{ "%.2f"|format(summary.profit) }}</p>
+          </article>
+          <article class="card warning-card">
+            <h3>Low Stock Items</h3>
+            <p>{{ summary.low_stock_items }}</p>
+          </article>
+        </section>
+
+        <section class="card">
+          <h2>Inventory Overview</h2>
+          <table>
+            <thead><tr><th>Item</th><th>Stock</th><th>Last Purchase</th><th>Last Sale</th></tr></thead>
+            <tbody>
+              {% for row in inventory %}
+                <tr class="{{ 'low-stock' if row['quantity_on_hand'] <= 3 else '' }}">
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["quantity_on_hand"] }}</td>
+                  <td>{{ "%.2f"|format(row["last_purchase_price"]) }}</td>
+                  <td>{{ "%.2f"|format(row["last_sale_price"]) }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4">No inventory yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Recent Transactions</h2>
+          <table>
+            <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+            <tbody>
+              {% for row in transactions %}
+                <tr>
+                  <td>{{ row["created_at"] }}</td>
+                  <td>{{ row["transaction_type"] }}</td>
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["quantity"] }}</td>
+                  <td>{{ "%.2f"|format(row["total"]) }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5">No transactions yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

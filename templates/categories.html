@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Categories - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('index') }}">Dashboard</a>
+          <a href="{{ url_for('sales_page') }}">Sale</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('customers_page') }}">Customer</a>
+          <a href="{{ url_for('suppliers_page') }}">Supplier</a>
+          <a class="active" href="{{ url_for('categories_page') }}">Category</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+          <a href="{{ url_for('salaries_page') }}">Salary</a>
+          <a href="{{ url_for('ledger_page') }}">Ledger</a>
+          <a href="{{ url_for('productions_page') }}">Production</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Categories</h1>
+            <p>Organize your products by category.</p>
+          </div>
+        </header>
+
+        <section class="card">
+          <h2>Add Category</h2>
+          <form action="{{ url_for('add_category') }}" method="post" class="stack-form">
+            <label>Name</label>
+            <input type="text" name="name" required>
+            <label>Description</label>
+            <input type="text" name="description">
+            <button type="submit">Save Category</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Category List</h2>
+          <table>
+            <thead><tr><th>Name</th><th>Description</th></tr></thead>
+            <tbody>
+              {% for category in categories %}
+                <tr>
+                  <td>{{ category["name"] }}</td>
+                  <td>{{ category["description"] }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="2">No categories yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

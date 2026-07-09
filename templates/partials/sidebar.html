@@ -1,0 +1,26 @@
+{% set endpoint = request.endpoint %}
+<div class="mobile-topbar">
+  <button type="button" class="menu-toggle" id="menuToggle" aria-label="Toggle navigation">☰</button>
+  <div class="mobile-topbar-title">Kamran Traders</div>
+</div>
+<aside class="sidebar" id="sidebarNav">
+  <h2>Kamran Traders</h2>
+  <nav>
+    <a href="{{ url_for('dashboard_page') }}" class="{% if endpoint == 'dashboard_page' %}active{% endif %}">Dashboard</a>
+    <a href="{{ url_for('sales_page') }}" class="{% if endpoint == 'sales_page' %}active{% endif %}">Sale</a>
+    <a href="{{ url_for('purchases_page') }}" class="{% if endpoint == 'purchases_page' %}active{% endif %}">Purchase</a>
+    <a href="{{ url_for('productions_page') }}" class="{% if endpoint == 'productions_page' %}active{% endif %}">Production</a>
+    <a href="{{ url_for('customers_page') }}" class="{% if endpoint in ['customers_page', 'customer_detail_page', 'edit_customer'] %}active{% endif %}">Customer</a>
+    <a href="{{ url_for('suppliers_page') }}" class="{% if endpoint in ['suppliers_page', 'supplier_detail_page', 'edit_supplier'] %}active{% endif %}">Supplier</a>
+    <a href="{{ url_for('ledger_page') }}" class="{% if endpoint == 'ledger_page' %}active{% endif %}">Ladgure</a>
+    <a href="{{ url_for('expenses_page') }}" class="{% if endpoint == 'expenses_page' %}active{% endif %}">Expenses</a>
+  </nav>
+  <div class="sidebar-theme-switch" id="theme-lamp-toggle" data-theme="light" role="button" tabindex="0" aria-label="Toggle theme">
+    <div class="theme-lamp">
+      <div class="theme-lamp-line"></div>
+      <div class="theme-lamp-knob"></div>
+      <div class="theme-lamp-shade"></div>
+    </div>
+    <span class="theme-lamp-label">Light</span>
+  </div>
+</aside>

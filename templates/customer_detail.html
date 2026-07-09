@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ customer['name'] }} - Customer Ledger</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('customers_page') }}">Back to Customers</a>
+          <a href="{{ url_for('sales_page') }}">Sales</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>{{ customer['name'] }}</h1>
+            <p>{{ customer['phone'] or '—' }} • {{ customer['email'] or '—' }} • {{ customer['address'] or '—' }}</p>
+          </div>
+        </header>
+
+        <section class="card">
+          <h2>Sales Records</h2>
+          <table>
+            <thead><tr><th>Date</th><th>Item</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+            <tbody>
+              {% for sale in sales %}
+                <tr>
+                  <td>{{ sale['created_at'] }}</td>
+                  <td>{{ sale['item_name'] }}</td>
+                  <td>{{ sale['quantity'] }}</td>
+                  <td>{{ "%.2f"|format(sale['unit_price']) }}</td>
+                  <td>{{ "%.2f"|format(sale['total']) }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5">No sales yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Invoices</h2>
+          <table>
+            <thead><tr><th>Invoice #</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+              {% for invoice in invoices %}
+                <tr>
+                  <td>{{ invoice['invoice_number'] }}</td>
+                  <td>{{ "%.2f"|format(invoice['total_amount']) }}</td>
+                  <td>{{ invoice['status'] }}</td>
+                  <td>{{ invoice['created_at'] }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4">No invoices yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Payments</h2>
+          <table>
+            <thead><tr><th>Invoice #</th><th>Amount</th><th>Date</th><th>Note</th></tr></thead>
+            <tbody>
+              {% for payment in payments %}
+                <tr>
+                  <td>{{ payment['invoice_number'] }}</td>
+                  <td>{{ "%.2f"|format(payment['amount']) }}</td>
+                  <td>{{ payment['payment_date'] }}</td>
+                  <td>{{ payment['note'] or '—' }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4">No payments yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

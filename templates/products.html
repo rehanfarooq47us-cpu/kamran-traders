@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Products - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+          <a href="{{ url_for('sales_page') }}">Sale</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('customers_page') }}">Customer</a>
+          <a href="{{ url_for('suppliers_page') }}">Supplier</a>
+          <a href="{{ url_for('categories_page') }}">Category</a>
+          <a class="active" href="{{ url_for('products_page') }}">Products</a>
+          <a href="{{ url_for('invoices_page') }}">Invoices</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+          <a href="{{ url_for('salaries_page') }}">Salary</a>
+          <a href="{{ url_for('ledger_page') }}">Ledger</a>
+          <a href="{{ url_for('productions_page') }}">Production</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Products</h1>
+            <p>Create and manage products with category-based pricing.</p>
+          </div>
+        </header>
+        <section class="card">
+          <h2>Add Product</h2>
+          <form action="{{ url_for('add_product') }}" method="post" class="stack-form">
+            <label>Name</label>
+            <input type="text" name="name" required>
+            <label>Price</label>
+            <input type="number" name="price" step="0.01" min="0" required>
+            <label>Stock Quantity</label>
+            <input type="number" name="stock_quantity" min="0" required>
+            <label>Category</label>
+            <select name="category_id">
+              <option value="">No category</option>
+              {% for category in categories %}
+                <option value="{{ category['id'] }}">{{ category['name'] }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit">Save Product</button>
+          </form>
+        </section>
+        <section class="card">
+          <h2>Product List</h2>
+          <table>
+            <thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Category</th></tr></thead>
+            <tbody>
+              {% for product in products %}
+                <tr>
+                  <td>{{ product['name'] }}</td>
+                  <td>{{ "%.2f"|format(product['price']) }}</td>
+                  <td>{{ product['stock_quantity'] }}</td>
+                  <td>{{ product['category_name'] or '—' }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4">No products yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

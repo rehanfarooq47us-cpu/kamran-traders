@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Purchases - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      .page-actions { display:flex; justify-content:flex-end; margin-bottom: 12px; }
+      .btn-primary { background:#3b82f6; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,0.5); display:none; align-items:center; justify-content:center; z-index:1200; }
+      .modal-backdrop.open { display:flex; }
+      .modal-card { background: var(--app-surface); width:min(460px, 92vw); border-radius:12px; padding:20px; box-shadow:0 16px 40px rgba(0,0,0,0.2); }
+      .modal-card h3 { margin-top:0; color: var(--app-text); }
+      .modal-card form { display:grid; gap:12px; }
+      .modal-card input, .modal-card select, .modal-card textarea { box-sizing:border-box; width:100%; padding:10px; border:1px solid #bfdbfe; border-radius:6px; }
+      .summary-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+      .summary-card { background: var(--app-surface); padding:12px 14px; border-radius:10px; box-shadow:0 6px 16px rgba(59,130,246,0.12); flex:1 1 180px; }
+      .helper-text { margin-top:4px; font-size:0.85rem; color:#475569; }
+      .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+      .btn-secondary { background:#e5e7eb; border:none; padding:10px 12px; border-radius:6px; cursor:pointer; }
+      .history-actions button { margin-right:6px; padding:6px 8px; border:none; border-radius:4px; cursor:pointer; }
+      .history-actions .edit-btn { background:#f59e0b; color:#fff; }
+      .history-actions .delete-btn { background:#ef4444; color:#fff; }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include 'partials/sidebar.html' %}
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Purchases</h1>
+            <p>Record every purchase and track supplier spending.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <div class="page-actions">
+            <button class="btn-primary" type="button" onclick="openModal()">+ Add Purchase</button>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-card">Total Flour Units: <strong>{{ flour_total_units }}</strong></div>
+            <div class="summary-card">Total Flour Kgs: <strong>{{ flour_total_kgs }}</strong></div>
+            <div class="summary-card">Flour Amount: <strong>{{ "%.2f"|format(flour_total_amount) }}</strong></div>
+          </div>
+
+          <h2>Recent Purchases</h2>
+          <div class="search-row">
+            <input type="text" placeholder="Live search purchases" oninput="filterTable(this.value, 'purchasesTable')">
+          </div>
+          <table id="purchasesTable">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Bill #</th>
+                <th>Supplier</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Qty (kg)</th>
+                <th>Rate</th>
+                <th>Total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in transactions %}
+                <tr>
+                  <td>{{ row["created_at"] }}</td>
+                  <td>{{ row["bill_number"] or '—' }}</td>
+                  <td>{% if row["supplier_name"] and row["supplier_id"] %}<a href="{{ url_for('supplier_detail_page', supplier_id=row['supplier_id']) }}">{{ row["supplier_name"] }}</a>{% elif row["supplier_name"] %}{{ row["supplier_name"] }}{% else %}—{% endif %}</td>
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["quantity"] }}</td>
+                  <td>{% if row["item_name"] and row["item_name"].strip().lower() == 'flour' %}{{ row["quantity"] * 15 }}{% else %}—{% endif %}</td>
+                  <td>{{ "%.2f"|format(row["unit_price"]) }}</td>
+                  <td>{{ "%.2f"|format(row["total"]) }}</td>
+                  <td class="history-actions">
+                    <button class="edit-btn" type="button" onclick="openEditModal({{ row['id'] }})">Edit</button>
+                    <form action="{{ url_for('delete_purchase', transaction_id=row['id']) }}" method="post" style="display:inline;">
+                      <button class="delete-btn" type="submit" onclick="return confirm('Delete this purchase?')">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="8">No purchases yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="purchaseModal">
+      <div class="modal-card">
+        <h3 id="modalTitle">Add Purchase</h3>
+        <form id="purchaseForm" method="post" action="{{ url_for('add_purchase') }}">
+          <div class="field-group">
+            <label for="purchaseDateInput">Date</label>
+            <input id="purchaseDateInput" type="date" name="purchase_date" value="{{ current_date }}" required>
+          </div>
+          <div class="field-group">
+            <label for="billNumberInput">Bill Number</label>
+            <input id="billNumberInput" type="text" name="bill_number" placeholder="Bill Number">
+          </div>
+          <div class="field-group">
+            <label for="supplierSelect">Supplier</label>
+            <select name="supplier_name" id="supplierSelect" required>
+              <option value="">Select supplier</option>
+              {% for supplier in suppliers %}
+                <option value="{{ supplier['name'] }}">{{ supplier['name'] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="itemNameInput">Item Name</label>
+            <input id="itemNameInput" type="text" name="item_name" placeholder="Item Name" required>
+          </div>
+          <div class="field-group">
+            <label for="quantityInput">Quantity</label>
+            <input id="quantityInput" type="number" name="quantity" min="1" placeholder="Quantity" required>
+          </div>
+          <div class="field-group">
+            <label for="unitPriceInput">Per Unit Rate</label>
+            <input id="unitPriceInput" type="number" name="unit_price" step="0.01" min="0" placeholder="Per Unit Rate" required>
+            <small class="field-note" id="priceConversionText">Enter Flour to see kg and flatbread rates.</small>
+          </div>
+          <div class="field-group">
+            <label for="noteInput">Note</label>
+            <input id="noteInput" type="text" name="note" placeholder="Note">
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+            <button class="btn-primary" type="submit">Save Purchase</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+      const modal = document.getElementById('purchaseModal');
+      const form = document.getElementById('purchaseForm');
+      const title = document.getElementById('modalTitle');
+
+      const itemNameInput = document.getElementById('itemNameInput');
+      const quantityInput = document.getElementById('quantityInput');
+      const unitPriceInput = document.getElementById('unitPriceInput');
+      const priceConversionText = document.getElementById('priceConversionText');
+
+      function updatePurchaseConversion() {
+        const itemName = itemNameInput.value.trim().toLowerCase();
+        const unitPrice = parseFloat(unitPriceInput.value) || 0;
+        if (itemName === 'flour' && unitPrice > 0) {
+          const perKg = unitPrice / 15;
+          const perFlatbread = perKg / 20;
+          priceConversionText.textContent = `1 kg = ${perKg.toFixed(2)}, 1 flatbread = ${perFlatbread.toFixed(2)}`;
+        } else {
+          priceConversionText.textContent = 'Enter item name Flour to see kg and flatbread rates.';
+        }
+      }
+
+      unitPriceInput.addEventListener('input', updatePurchaseConversion);
+      itemNameInput.addEventListener('input', updatePurchaseConversion);
+
+      const currentDate = '{{ current_date }}';
+
+      function openModal() {
+        title.textContent = 'Add Purchase';
+        form.action = '{{ url_for("add_purchase") }}';
+        form.reset();
+        form.elements.purchase_date.value = currentDate;
+        priceConversionText.textContent = 'Enter item name Flour to see kg and flatbread rates.';
+        modal.classList.add('open');
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      function openEditModal(id) {
+        title.textContent = 'Edit Purchase';
+        form.action = `/purchases/${id}/edit`;
+        fetch(`/purchases/${id}/edit`)
+          .then(r => r.json())
+          .then(data => {
+            form.elements.purchase_date.value = data.created_at ? data.created_at.split(' ')[0] : '';
+            form.elements.bill_number.value = data.bill_number || '';
+            form.elements.supplier_name.value = data.supplier_name || '';
+            form.elements.item_name.value = data.item_name || '';
+            form.elements.quantity.value = data.quantity || '';
+            form.elements.unit_price.value = data.unit_price || '';
+            form.elements.note.value = data.note || '';
+            modal.classList.add('open');
+          });
+      }
+
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) closeModal();
+      });
+    </script>
+  </body>
+</html>

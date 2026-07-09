@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Invoices - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+          <a href="{{ url_for('sales_page') }}">Sale</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('customers_page') }}">Customer</a>
+          <a href="{{ url_for('suppliers_page') }}">Supplier</a>
+          <a href="{{ url_for('categories_page') }}">Category</a>
+          <a href="{{ url_for('products_page') }}">Products</a>
+          <a class="active" href="{{ url_for('invoices_page') }}">Invoices</a>
+          <a href="{{ url_for('ledger_page') }}">Ledger</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+          <a href="{{ url_for('salaries_page') }}">Salary</a>
+          <a href="{{ url_for('reports_page') }}">Reports</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Invoices</h1>
+            <p>Create and track invoices with statuses.</p>
+          </div>
+        </header>
+        <section class="card">
+          <h2>Create Invoice</h2>
+          <form action="{{ url_for('add_invoice') }}" method="post" class="stack-form">
+            <label>Invoice Number</label>
+            <input type="text" name="invoice_number" required>
+            <label>Customer Name</label>
+            <input type="text" name="customer_name" required>
+            <label>Total Amount</label>
+            <input type="number" name="total_amount" step="0.01" min="0" required>
+            <label>Status</label>
+            <select name="status">
+              <option value="Pending">Pending</option>
+              <option value="Paid">Paid</option>
+              <option value="Overdue">Overdue</option>
+            </select>
+            <label>Details</label>
+            <textarea name="details" placeholder="Invoice items or notes"></textarea>
+            <button type="submit">Save Invoice</button>
+          </form>
+        </section>
+        <section class="card">
+          <h2>Invoice List</h2>
+          <table>
+            <thead><tr><th>Invoice #</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+            <tbody>
+              {% for invoice in invoices %}
+                <tr>
+                  <td>{{ invoice['invoice_number'] }}</td>
+                  <td>{{ invoice['customer_name'] }}</td>
+                  <td>{{ "%.2f"|format(invoice['total_amount']) }}</td>
+                  <td>{{ invoice['status'] }}</td>
+                  <td>{{ invoice['created_at'] }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5">No invoices yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

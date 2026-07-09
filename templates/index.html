@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Kamran Traders</h1>
+      <p class="subtitle">A practical Python-based tool for tracking purchases, sales, and stock in one place.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-list">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <section class="summary-grid">
+        <article class="card">
+          <h3>Total Purchases</h3>
+          <p>{{ "%.2f"|format(summary.total_purchases) }}</p>
+        </article>
+        <article class="card">
+          <h3>Total Sales</h3>
+          <p>{{ "%.2f"|format(summary.total_sales) }}</p>
+        </article>
+        <article class="card">
+          <h3>Profit</h3>
+          <p>{{ "%.2f"|format(summary.profit) }}</p>
+        </article>
+        <article class="card">
+          <h3>Inventory Items</h3>
+          <p>{{ summary.inventory_items }}</p>
+        </article>
+        <article class="card warning-card">
+          <h3>Low Stock Items</h3>
+          <p>{{ summary.low_stock_items }}</p>
+        </article>
+      </section>
+
+      <section class="card search-card">
+        <form method="get" action="{{ url_for('index') }}">
+          <label for="search">Search inventory or transactions</label>
+          <div class="search-row">
+            <input id="search" type="text" name="q" value="{{ query }}" placeholder="Type item name">
+            <button type="submit">Search</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="forms-grid">
+        <form action="{{ url_for('add_purchase') }}" method="post" class="card">
+          <h2>Add Purchase</h2>
+          <label>Item name</label>
+          <input type="text" name="item_name" required>
+          <label>Quantity</label>
+          <input type="number" name="quantity" min="1" required>
+          <label>Unit price</label>
+          <input type="number" name="unit_price" step="0.01" min="0" required>
+          <label>Note</label>
+          <input type="text" name="note">
+          <button type="submit">Save Purchase</button>
+        </form>
+
+        <form action="{{ url_for('add_sale') }}" method="post" class="card">
+          <h2>Add Sale</h2>
+          <label>Item name</label>
+          <input type="text" name="item_name" required>
+          <label>Quantity</label>
+          <input type="number" name="quantity" min="1" required>
+          <label>Unit price</label>
+          <input type="number" name="unit_price" step="0.01" min="0" required>
+          <button type="submit">Save Sale</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Current Inventory</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Stock</th>
+              <th>Last Purchase</th>
+              <th>Last Sale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in inventory %}
+              <tr class="{{ 'low-stock' if row['quantity_on_hand'] <= 3 else '' }}">
+                <td>{{ row["item_name"] }}</td>
+                <td>{{ row["quantity_on_hand"] }}</td>
+                <td>{{ "%.2f"|format(row["last_purchase_price"]) }}</td>
+                <td>{{ "%.2f"|format(row["last_sale_price"]) }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="4">No inventory yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <h2>Recent Transactions</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in transactions %}
+              <tr>
+                <td>{{ row["created_at"] }}</td>
+                <td>{{ row["transaction_type"] }}</td>
+                <td>{{ row["item_name"] }}</td>
+                <td>{{ row["quantity"] }}</td>
+                <td>{{ "%.2f"|format(row["unit_price"]) }}</td>
+                <td>{{ "%.2f"|format(row["total"]) }}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="6">No transactions yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </body>
+</html>

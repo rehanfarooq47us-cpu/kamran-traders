@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Customer - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('customers_page') }}">Back to Customers</a>
+          <a href="{{ url_for('sales_page') }}">Sales</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('expenses_page') }}">Expenses</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Edit Customer</h1>
+            <p>Update the customer details below.</p>
+          </div>
+        </header>
+
+        <section class="card">
+          <form action="{{ url_for('edit_customer', customer_id=customer['id']) }}" method="post" class="stack-form">
+            <label>Name</label>
+            <input type="text" name="name" value="{{ customer['name'] }}" required>
+            <label>Phone</label>
+            <input type="text" name="phone" value="{{ customer['phone'] or '' }}">
+            <label>Address</label>
+            <input type="text" name="address" value="{{ customer['address'] or '' }}">
+            <button type="submit">Update Customer</button>
+          </form>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

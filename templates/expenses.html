@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Expenses - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include 'partials/sidebar.html' %}
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Expenses</h1>
+            <p>Record operating expenses and keep them organized by category.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <div class="expense-actions">
+            <button type="button" class="primary-btn modal-trigger" data-target="otherExpenseModal">Other Expenses</button>
+            <button type="button" class="secondary-btn modal-trigger" data-target="salaryModal">Salary</button>
+          </div>
+          <div class="expense-summary">
+            <strong>Total Expenses: {{ "%.2f"|format(total_expenses) }}</strong>
+          </div>
+        </section>
+
+        <div id="otherExpenseModal" class="modal-backdrop" hidden>
+          <div class="modal-card">
+            <button type="button" class="modal-close" data-close="otherExpenseModal" aria-label="Close">×</button>
+            <h2>Other Expense</h2>
+            <form action="{{ url_for('add_expense') }}" method="post" class="stack-form">
+              <input type="hidden" name="entry_type" value="expense">
+              <label>Date</label>
+              <input type="date" name="expense_date" value="{{ current_date }}" required>
+              <label>Expense Type</label>
+              <input type="text" name="expense_type" required>
+              <label>Amount</label>
+              <input type="number" name="expense_amount" step="0.01" min="0" required>
+              <label>Category</label>
+              <input type="text" name="expense_category">
+              <label>Note</label>
+              <textarea name="expense_note"></textarea>
+              <button type="submit">Save Expense</button>
+            </form>
+          </div>
+        </div>
+
+        <div id="salaryModal" class="modal-backdrop" hidden>
+          <div class="modal-card">
+            <button type="button" class="modal-close" data-close="salaryModal" aria-label="Close">×</button>
+            <h2>Salary</h2>
+            <form action="{{ url_for('add_expense') }}" method="post" class="stack-form">
+              <input type="hidden" name="entry_type" value="salary">
+              <label>Date</label>
+              <input type="date" name="salary_date" value="{{ current_date }}" required>
+              <label>Worker Name</label>
+              <input type="text" name="worker_name" required>
+              <label>Salary Amount</label>
+              <input type="number" name="salary_amount" step="0.01" min="0" required>
+              <button type="submit">Paid</button>
+            </form>
+          </div>
+        </div>
+
+        <section class="card">
+          <h2>Expense Ledger</h2>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Amount</th><th>Date</th><th>Category</th><th>Type</th><th>Note</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for expense in expenses %}
+                <tr>
+                  <td>{{ expense['name'] }}</td>
+                  <td>{{ "%.2f"|format(expense['amount']) }}</td>
+                  <td>{{ expense['expense_date'] }}</td>
+                  <td>{{ expense['category'] or '—' }}</td>
+                  <td>{{ expense['entry_type'] or 'expense' }}</td>
+                  <td>{{ expense['note'] or '—' }}</td>
+                  <td>
+                    <form action="{{ url_for('delete_expense', expense_id=expense['id']) }}" method="post" style="display:inline">
+                      <button class="btn-secondary" type="submit">Delete</button>
+                    </form>
+                    <button class="btn-primary" type="button" onclick="editExpense({{ expense['id'] }})">Edit</button>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="6">No expenses yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+      async function editExpense(id) {
+        const response = await fetch(`/expenses/${id}/edit`);
+        const data = await response.json();
+        const editForm = document.getElementById('expenseEditForm');
+        const editEntryType = document.getElementById('editEntryType');
+        const editExpenseDate = document.getElementById('editExpenseDate');
+        const editExpenseName = document.getElementById('editExpenseName');
+        const editExpenseAmount = document.getElementById('editExpenseAmount');
+        const editExpenseCategory = document.getElementById('editExpenseCategory');
+        const editExpenseNote = document.getElementById('editExpenseNote');
+
+        editForm.action = `/expenses/${id}/edit`;
+        editExpenseDate.value = data.expense_date || '';
+        if (data.entry_type === 'salary') {
+          editEntryType.value = 'salary';
+          editExpenseName.name = 'worker_name';
+          editExpenseName.value = data.name || '';
+          editExpenseAmount.name = 'salary_amount';
+          editExpenseAmount.value = data.amount || '';
+          editExpenseCategory.parentElement.style.display = 'none';
+          editExpenseNote.parentElement.style.display = 'none';
+        } else {
+          editEntryType.value = 'expense';
+          editExpenseName.name = 'expense_type';
+          editExpenseName.value = data.name || '';
+          editExpenseAmount.name = 'expense_amount';
+          editExpenseAmount.value = data.amount || '';
+          editExpenseCategory.parentElement.style.display = 'block';
+          editExpenseNote.parentElement.style.display = 'block';
+          editExpenseCategory.value = data.category || '';
+          editExpenseNote.value = data.note || '';
+        }
+
+        document.getElementById('expenseEditModal').hidden = false;
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.modal-trigger').forEach((button) => {
+          button.addEventListener('click', () => {
+            const modal = document.getElementById(button.getAttribute('data-target'));
+            if (modal) {
+              modal.hidden = false;
+            }
+          });
+        });
+
+        document.querySelectorAll('.modal-backdrop').forEach((modal) => {
+          modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+              modal.hidden = true;
+            }
+          });
+        });
+
+        document.querySelectorAll('.modal-close').forEach((button) => {
+          button.addEventListener('click', () => {
+            const modal = document.getElementById(button.getAttribute('data-close'));
+            if (modal) {
+              modal.hidden = true;
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

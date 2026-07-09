@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reports - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('productions_page') }}">Production</a>
+          <a class="active" href="{{ url_for('reports_page') }}">Reports</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </aside>
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Profit / Loss</h1>
+            <p>Review sales, purchases, and expenses over a range of dates.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <h2>Filter Report</h2>
+          <form method="get" action="{{ url_for('reports_page') }}" class="stack-form">
+            <label>Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date or '' }}">
+            <label>End Date</label>
+            <input type="date" name="end_date" value="{{ end_date or '' }}">
+            <button type="submit">Run Report</button>
+          </form>
+        </section>
+
+        <section class="summary-grid">
+          <article class="card">
+            <h3>Sales</h3>
+            <p>{{ "%.2f"|format(report.sales_total) }}</p>
+          </article>
+          <article class="card">
+            <h3>Purchases</h3>
+            <p>{{ "%.2f"|format(report.purchases_total) }}</p>
+          </article>
+          <article class="card">
+            <h3>Expenses</h3>
+            <p>{{ "%.2f"|format(report.expense_total) }}</p>
+          </article>
+          <article class="card">
+            <h3>Profit / Loss</h3>
+            <p>{{ "%.2f"|format(report.profit_loss) }}</p>
+          </article>
+        </section>
+
+        <section class="card">
+          <h2>Record Payment</h2>
+          <form action="{{ url_for('add_payment') }}" method="post" class="stack-form">
+            <label>Invoice Number</label>
+            <input type="text" name="invoice_number" required>
+            <label>Type</label>
+            <select name="payment_type">
+              <option value="customer">Customer</option>
+              <option value="supplier">Supplier</option>
+            </select>
+            <label>Customer Name</label>
+            <input type="text" name="customer_name" placeholder="Optional">
+            <label>Supplier Name</label>
+            <input type="text" name="supplier_name" placeholder="Optional">
+            <label>Amount</label>
+            <input type="number" name="amount" step="0.01" min="0" required>
+            <label>Date</label>
+            <input type="date" name="payment_date" required>
+            <label>Note</label>
+            <textarea name="note"></textarea>
+            <button type="submit">Save Payment</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Add Expense</h2>
+          <form action="{{ url_for('add_expense') }}" method="post" class="stack-form">
+            <label>Name</label>
+            <input type="text" name="name" required>
+            <label>Amount</label>
+            <input type="number" name="amount" step="0.01" min="0" required>
+            <label>Date</label>
+            <input type="date" name="expense_date" required>
+            <label>Category</label>
+            <input type="text" name="category">
+            <label>Note</label>
+            <textarea name="note"></textarea>
+            <button type="submit">Save Expense</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Expense List</h2>
+          <table>
+            <thead>
+              <tr><th>Name</th><th>Amount</th><th>Date</th><th>Category</th><th>Note</th></tr>
+            </thead>
+            <tbody>
+              {% for expense in expenses %}
+                <tr>
+                  <td>{{ expense['name'] }}</td>
+                  <td>{{ "%.2f"|format(expense['amount']) }}</td>
+                  <td>{{ expense['expense_date'] }}</td>
+                  <td>{{ expense['category'] or '—' }}</td>
+                  <td>{{ expense['note'] or '—' }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5">No expenses yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

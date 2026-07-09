@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sales - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      .page-actions { display:flex; justify-content:flex-end; margin-bottom: 12px; }
+      .btn-primary { background:#3b82f6; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .btn-secondary { background:#e5e7eb; color:#1f2937; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .summary-row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px; }
+      .summary-card { background:#eff6ff; padding:14px; border-radius:12px; flex:1 1 180px; box-shadow:0 8px 24px rgba(59,130,246,0.08); }
+      .sales-table { width:100%; border-collapse:collapse; margin-top:16px; }
+      .sales-table th, .sales-table td { padding:12px 10px; border-bottom:1px solid #e2e8f0; text-align:left; }
+      .sales-table th { background:#eff6ff; color:#1e3a8a; }
+      .sidebar nav a { display:block; padding:10px 0; color:#1f2937; text-decoration:none; }
+      .sidebar nav a.active { font-weight:700; color:#1d4ed8; }
+      .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,0.5); display:none; align-items:center; justify-content:center; z-index:1200; }
+      .modal-backdrop.open { display:flex; }
+      .modal-card { background:#fff; width:min(480px, 92vw); border-radius:12px; padding:22px; box-shadow:0 24px 60px rgba(15,23,42,0.12); }
+      .modal-card input,
+      .modal-card select,
+      .modal-card textarea { box-sizing:border-box; width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; }
+      .modal-card h3 { margin-top:0; }
+      .modal-card .field-group { display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+      .field-note { font-size:0.84rem; color:#475569; }
+      .field-summary { display:flex; justify-content:space-between; gap:12px; background:linear-gradient(135deg,#eff6ff,#f8fbff); border:1px solid #bfdbfe; border-radius:12px; padding:12px 14px; color:#1e3a8a; margin-top:10px; font-weight:600; }
+      .field-summary strong { color:#1d4ed8; }
+      .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:16px; }
+      .search-row { margin-bottom:12px; }
+      .search-row input { width:100%; padding:10px; border-radius:8px; border:1px solid #cbd5e1; }
+      @media (max-width: 900px) { .summary-row { flex-direction:column; } }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include 'partials/sidebar.html' %}
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Sales</h1>
+            <p>Record retail sales and manage customer activity.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <div class="page-actions">
+            <button class="btn-primary" type="button" onclick="openModal()">+ Add Sale</button>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-card">Total Sales Amount: <strong>{{ "%.2f"|format(total_sales_amount) }}</strong></div>
+            <div class="summary-card">Total Sales Count: <strong>{{ transactions|length }}</strong></div>
+          </div>
+
+          <div class="search-row">
+            <input type="text" placeholder="Live search sales" oninput="filterTable(this.value, 'salesTable')">
+          </div>
+
+          <table id="salesTable" class="sales-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Rate</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in transactions %}
+                <tr>
+                  <td>{{ row["created_at"] }}</td>
+                  <td>{{ row["customer_name"] or '—' }}</td>
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["quantity"] }}</td>
+                  <td>{{ "%.2f"|format(row["unit_price"]) }}</td>
+                  <td>{{ "%.2f"|format(row["total"]) }}</td>
+                  <td>
+                    <form action="{{ url_for('delete_sale', transaction_id=row['id']) }}" method="post" style="display:inline">
+                      <button class="btn-secondary" type="submit">Delete</button>
+                    </form>
+                    <button class="btn-primary" type="button" onclick="editSale({{ row['id'] }})">Edit</button>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="6">No sales yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="saleModal">
+      <div class="modal-card">
+        <h3>Add Sale</h3>
+        <form id="saleForm" method="post" action="{{ url_for('add_sale') }}">
+          <div class="field-group">
+            <label for="saleDateInput">Date</label>
+            <input id="saleDateInput" type="date" name="sale_date" value="{{ current_date }}">
+          </div>
+          <div class="field-group">
+            <label for="customerSelect">Customer</label>
+            <select name="customer_name" id="customerSelect" required>
+              <option value="">Select customer</option>
+              {% for customer in customers %}
+                <option value="{{ customer['name'] }}">{{ customer['name'] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="itemNameSelect">Item</label>
+            <select name="item_name" id="itemNameSelect" required>
+              <option value="Flatbread" selected>Flatbread</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="quantityInput">Quantity</label>
+            <input type="number" name="quantity" id="quantityInput" min="1" placeholder="Quantity" required>
+            <small class="field-note">Quantity selected here will update total automatically.</small>
+          </div>
+          <div class="field-group">
+            <label for="unitPriceInput">Unit Price</label>
+            <input type="number" name="unit_price" id="unitPriceInput" step="0.01" min="0" placeholder="Unit Price" required value="{{ "%.2f"|format(flatbread_rate) }}">
+            <small class="field-note">1 unit cost: <strong id="unitPriceHint"></strong></small>
+          </div>
+          <div class="field-group">
+            <label for="totalAmountInput">Total Amount</label>
+            <input type="number" name="total_amount" id="totalAmountInput" step="0.01" min="0" placeholder="Total Amount">
+            <small class="field-note">Enter total to keep unit price and sale amount in sync.</small>
+          </div>
+          <div class="field-summary">
+            <div>Bread cost: <strong id="breadCostDisplay">0.00</strong></div>
+            <div>Sale amount: <strong id="saleAmountDisplay">0.00</strong></div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+            <button class="btn-primary" type="submit" name="action" value="save">Save Sale</button>
+            <button class="btn-primary" type="submit" name="action" value="save_print">Save & Print</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="saleEditModal">
+      <div class="modal-card">
+        <h3>Edit Sale</h3>
+        <form id="saleEditForm" method="post">
+          <div class="field-group">
+            <label for="editSaleDateInput">Date</label>
+            <input id="editSaleDateInput" type="date" name="sale_date">
+          </div>
+          <div class="field-group">
+            <label for="editCustomerSelect">Customer</label>
+            <input id="editCustomerSelect" type="text" name="customer_name" required>
+          </div>
+          <div class="field-group">
+            <label for="editItemNameInput">Item</label>
+            <input id="editItemNameInput" type="text" name="item_name" required>
+          </div>
+          <div class="field-group">
+            <label for="editQuantityInput">Quantity</label>
+            <input type="number" name="quantity" id="editQuantityInput" min="1" required>
+          </div>
+          <div class="field-group">
+            <label for="editUnitPriceInput">Unit Price</label>
+            <input type="number" name="unit_price" id="editUnitPriceInput" step="0.01" min="0" required>
+          </div>
+          <div class="field-group">
+            <label for="editTotalAmountInput">Total Amount</label>
+            <input type="number" name="total_amount" id="editTotalAmountInput" step="0.01" min="0">
+          </div>
+          <div class="modal-actions">
+            <button class="btn-secondary" type="button" onclick="closeEditSaleModal()">Cancel</button>
+            <button class="btn-primary" type="submit">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+      function printReceipt() {
+        window.print();
+      }
+      const saleModal = document.getElementById('saleModal');
+      const saleEditModal = document.getElementById('saleEditModal');
+      const saleForm = document.getElementById('saleForm');
+      const saleEditForm = document.getElementById('saleEditForm');
+
+      const currentDate = '{{ current_date }}';
+
+      function openModal() {
+        saleForm.reset();
+        saleForm.elements.sale_date.value = currentDate;
+        saleModal.classList.add('open');
+      }
+
+      function closeModal() {
+        saleModal.classList.remove('open');
+      }
+
+      function closeEditSaleModal() {
+        saleEditModal.classList.remove('open');
+      }
+
+      saleModal.addEventListener('click', function (event) {
+        if (event.target === saleModal) closeModal();
+      });
+
+      saleEditModal.addEventListener('click', function (event) {
+        if (event.target === saleEditModal) closeEditSaleModal();
+      });
+
+      function filterTable(query, tableId) {
+        const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+        rows.forEach(row => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+        });
+      }
+
+      const quantityInput = document.getElementById('quantityInput');
+      const unitPriceInput = document.getElementById('unitPriceInput');
+      const totalAmountInput = document.getElementById('totalAmountInput');
+      const unitPriceHint = document.getElementById('unitPriceHint');
+      const breadCostDisplay = document.getElementById('breadCostDisplay');
+      const saleAmountDisplay = document.getElementById('saleAmountDisplay');
+      const flatbreadRate = parseFloat('{{ "%.2f"|format(flatbread_rate) }}') || 0;
+      let activeField = 'unit';
+
+      function updateTotalFromUnit() {
+        const qty = parseFloat(quantityInput.value) || 0;
+        const unit = parseFloat(unitPriceInput.value) || 0;
+        if (qty > 0 && unit >= 0) {
+          totalAmountInput.value = (qty * unit).toFixed(2);
+        } else {
+          totalAmountInput.value = '';
+        }
+        updateSaleSummary();
+      }
+
+      function updateUnitFromTotal() {
+        const qty = parseFloat(quantityInput.value) || 0;
+        const total = parseFloat(totalAmountInput.value) || 0;
+        if (qty > 0 && total >= 0) {
+          unitPriceInput.value = (total / qty).toFixed(2);
+        } else {
+          unitPriceInput.value = '';
+        }
+        updateSaleSummary();
+      }
+
+      function updateSaleSummary() {
+        const qty = parseFloat(quantityInput.value) || 0;
+        const unit = parseFloat(unitPriceInput.value) || 0;
+        const total = parseFloat(totalAmountInput.value);
+        const computedTotal = qty > 0 && unit >= 0 ? qty * unit : 0;
+        const saleTotal = !isNaN(total) && totalAmountInput.value !== '' ? total : computedTotal;
+        breadCostDisplay.textContent = qty > 0 ? (qty * flatbreadRate).toFixed(2) : '0.00';
+        saleAmountDisplay.textContent = saleTotal.toFixed(2);
+      }
+
+      function showUnitPriceHint() {
+        unitPriceHint.textContent = flatbreadRate.toFixed(2);
+        updateSaleSummary();
+      }
+
+      quantityInput.addEventListener('input', function () {
+        if (activeField === 'total' && totalAmountInput.value !== '') {
+          updateUnitFromTotal();
+        } else {
+          updateTotalFromUnit();
+        }
+      });
+
+      unitPriceInput.addEventListener('input', function () {
+        activeField = 'unit';
+        if (unitPriceInput.value !== '') {
+          updateTotalFromUnit();
+        } else {
+          totalAmountInput.value = '';
+          updateSaleSummary();
+        }
+      });
+
+      totalAmountInput.addEventListener('input', function () {
+        activeField = 'total';
+        if (totalAmountInput.value !== '') {
+          updateUnitFromTotal();
+        } else {
+          unitPriceInput.value = '';
+          updateSaleSummary();
+        }
+      });
+
+      async function editSale(id) {
+        const response = await fetch(`/sales/${id}/edit`);
+        const data = await response.json();
+        saleEditForm.action = `/sales/${id}/edit`;
+        document.getElementById('editSaleDateInput').value = data.created_at ? data.created_at.split(' ')[0] : '';
+        document.getElementById('editCustomerSelect').value = data.customer_name || '';
+        document.getElementById('editItemNameInput').value = data.item_name || '';
+        document.getElementById('editQuantityInput').value = data.quantity || '';
+        document.getElementById('editUnitPriceInput').value = data.unit_price || '';
+        document.getElementById('editTotalAmountInput').value = data.total || '';
+        saleEditModal.classList.add('open');
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        showUnitPriceHint();
+        if (!unitPriceInput.value) {
+          unitPriceInput.value = flatbreadRate.toFixed(2);
+        }
+        updateSaleSummary();
+      });
+    </script>
+  </body>
+</html>

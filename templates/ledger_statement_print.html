@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ledger Statement</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
+      .title { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+      .meta { margin-bottom: 16px; color: #4b5563; }
+      table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+      th, td { border: 1px solid #d1d5db; padding: 8px; text-align: left; }
+      th { background: #f3f4f6; font-weight: 700; }
+      @media print {
+        body { margin: 0; }
+        .title { font-size: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="title">Ledger Statement</div>
+    <div class="meta">
+      <div><strong>Party:</strong> {{ party['name'] }}</div>
+      <div><strong>Type:</strong> {{ party_type|capitalize }}</div>
+      {% if party['phone'] %}<div><strong>Phone:</strong> {{ party['phone'] }}</div>{% endif %}
+      {% if party['address'] %}<div><strong>Address:</strong> {{ party['address'] }}</div>{% endif %}
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Detail</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry['date'] }}</td>
+            <td>{{ entry['label'] }}{% if entry['bill_number'] %} (Bill {{ entry['bill_number'] }}){% endif %}</td>
+            <td>{{ "%.2f"|format(entry['amount']) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table style="margin-top: 16px;">
+      <tr><th>{{ label }}</th><td>{{ "%.2f"|format(total_value) }}</td></tr>
+      <tr><th>Payments</th><td>{{ "%.2f"|format(payment_total) }}</td></tr>
+      <tr><th>Balance</th><td>{{ "%.2f"|format(balance) }}</td></tr>
+    </table>
+  </body>
+</html>

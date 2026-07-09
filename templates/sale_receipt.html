@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sale Receipt</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 16px;
+        background: #fff;
+        color: #000;
+      }
+      .receipt {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+        border: 1px dashed #000;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      .center { text-align: center; }
+      .line { border-top: 1px dashed #000; margin: 8px 0; }
+      .row { display: flex; justify-content: space-between; gap: 8px; margin: 4px 0; }
+      .small { font-size: 0.8rem; }
+      @media print {
+        body { padding: 0; }
+        .receipt { border: none; max-width: none; width: 100%; }
+        .no-print { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="receipt">
+      <div class="center">
+        <strong>Business Hub</strong>
+        <div class="small">Sales Receipt</div>
+      </div>
+      <div class="line"></div>
+      <div class="row"><span>Date</span><span>{{ sale['created_at'] }}</span></div>
+      <div class="row"><span>Customer</span><span>{{ sale['customer_name'] or '—' }}</span></div>
+      <div class="row"><span>Item</span><span>{{ sale['item_name'] }}</span></div>
+      <div class="row"><span>Qty</span><span>{{ sale['quantity'] }}</span></div>
+      <div class="row"><span>Rate</span><span>{{ "%.2f"|format(sale['unit_price']) }}</span></div>
+      <div class="line"></div>
+      <div class="row"><strong>Total</strong><strong>{{ "%.2f"|format(sale['total']) }}</strong></div>
+      <div class="line"></div>
+      <div class="center small">Thank you</div>
+      <div class="center no-print" style="margin-top: 12px;">
+        <button type="button" onclick="window.print()">Print Receipt</button>
+        <a href="{{ url_for('sales_page') }}" style="display: inline-block; margin-top: 8px;">Back to Sales</a>
+      </div>
+    </div>
+  </body>
+</html>

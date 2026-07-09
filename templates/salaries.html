@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Salary - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <h2>Business Hub</h2>
+        <nav>
+          <a href="{{ url_for('purchases_page') }}">Purchase</a>
+          <a href="{{ url_for('productions_page') }}">Production</a>
+          <a class="active" href="{{ url_for('salaries_page') }}">Salary</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Salary</h1>
+            <p>Track employee salary payouts and payment status.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <h2>Salary</h2>
+          <p>This section has been removed from the simplified app.</p>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>

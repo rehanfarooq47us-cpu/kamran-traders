@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include 'partials/sidebar.html' %}
+
+      <main class="main-content">
+        <header class="page-header page-header-center dashboard-branding">
+          <div class="dashboard-brand-cloud">
+            <div class="dashboard-brand-copy">
+              <span>Kamran Traders</span>
+            </div>
+          </div>
+          <div>
+            <p>Daily business overview for sales, purchases, and profits.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="progress-section">
+          <div class="progress-block">
+            <h2>Monthly Progress</h2>
+            <div class="progress-row"><span>Sales</span><strong>{{ "%.2f"|format(metrics.monthly_sales) }}</strong></div>
+            <div class="progress-row"><span>Purchase</span><strong>{{ "%.2f"|format(metrics.monthly_purchases) }}</strong></div>
+            <div class="progress-row"><span>Expenses</span><strong>{{ "%.2f"|format(metrics.monthly_expenses) }}</strong></div>
+            <div class="progress-row"><span>Credit</span><strong>{{ "%.2f"|format(metrics.monthly_credit) }}</strong></div>
+            <div class="progress-row"><span>Payments</span><strong>{{ "%.2f"|format(metrics.monthly_payments) }}</strong></div>
+            <div class="progress-row"><span>Profit</span><strong>{{ "%.2f"|format(metrics.monthly_profit) }}</strong></div>
+          </div>
+
+          <div class="progress-block">
+            <h2>Today Progress</h2>
+            <div class="progress-row"><span>Sales</span><strong>{{ "%.2f"|format(metrics.daily_sales) }}</strong></div>
+            <div class="progress-row"><span>Purchase</span><strong>{{ "%.2f"|format(metrics.daily_purchases) }}</strong></div>
+            <div class="progress-row"><span>Expenses</span><strong>{{ "%.2f"|format(metrics.daily_expenses) }}</strong></div>
+            <div class="progress-row"><span>Credit</span><strong>{{ "%.2f"|format(metrics.daily_credit) }}</strong></div>
+            <div class="progress-row"><span>Payments</span><strong>{{ "%.2f"|format(metrics.daily_payments) }}</strong></div>
+            <div class="progress-row"><span>Profit</span><strong>{{ "%.2f"|format(metrics.daily_profit) }}</strong></div>
+          </div>
+
+          <div class="progress-block">
+            <h2>Total Progress</h2>
+            <div class="progress-row"><span>Sales</span><strong>{{ "%.2f"|format(metrics.total_sales) }}</strong></div>
+            <div class="progress-row"><span>Purchase</span><strong>{{ "%.2f"|format(metrics.total_purchases) }}</strong></div>
+            <div class="progress-row"><span>Expenses</span><strong>{{ "%.2f"|format(metrics.total_expenses) }}</strong></div>
+            <div class="progress-row"><span>Credit</span><strong>{{ "%.2f"|format(metrics.total_credit) }}</strong></div>
+            <div class="progress-row"><span>Payments</span><strong>{{ "%.2f"|format(metrics.total_payments) }}</strong></div>
+            <div class="progress-row"><span>Profit</span><strong>{{ "%.2f"|format(metrics.total_profit) }}</strong></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2>Recent Activity</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in transactions %}
+                <tr>
+                  <td>{{ row["created_at"] }}</td>
+                  <td>{{ row["transaction_type"] }}</td>
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["quantity"] }}</td>
+                  <td>{{ "%.2f"|format(row["unit_price"]) }}</td>
+                  <td>{{ "%.2f"|format(row["total"]) }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="6">No transactions yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+
+        <section class="card">
+          <h2>Inventory Snapshot</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Stock</th>
+                <th>Last Purchase</th>
+                <th>Last Sale</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in summary.top_items %}
+                <tr>
+                  <td>{{ row["item_name"] }}</td>
+                  <td>{{ row["total_qty"] }}</td>
+                  <td>—</td>
+                  <td>—</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="4">No sales activity yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Production - Kamran Traders</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+      .page-actions { display:flex; justify-content:flex-end; margin-bottom: 12px; }
+      .btn-primary { background:#3b82f6; color:#fff; border:none; padding:10px 14px; border-radius:6px; cursor:pointer; }
+      .modal-backdrop { position:fixed; inset:0; background:rgba(15,23,42,0.5); display:none; align-items:center; justify-content:center; z-index:1200; }
+      .modal-backdrop.open { display:flex; }
+      .modal-card { background: var(--app-surface); width:min(460px, 92vw); border-radius:12px; padding:20px; box-shadow:0 16px 40px rgba(0,0,0,0.2); }
+      .modal-card h3 { margin-top:0; color: var(--app-text); }
+      .modal-card form { display:grid; gap:12px; }
+      .modal-card input, .modal-card select, .modal-card textarea { box-sizing:border-box; width:100%; padding:10px; border:1px solid #bfdbfe; border-radius:6px; }
+      .summary-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+      .summary-card { background: var(--app-surface); padding:12px 14px; border-radius:10px; box-shadow:0 6px 16px rgba(59,130,246,0.12); flex:1 1 180px; }
+      .helper-text { font-size:0.85rem; color:#475569; }
+      .modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+      .btn-secondary { background:#e5e7eb; border:none; padding:10px 12px; border-radius:6px; cursor:pointer; }
+      .history-actions button { margin-right:6px; padding:6px 8px; border:none; border-radius:4px; cursor:pointer; }
+      .history-actions .edit-btn { background:#f59e0b; color:#fff; }
+      .history-actions .delete-btn { background:#ef4444; color:#fff; }
+    </style>
+  </head>
+  <body>
+    <div class="app-shell">
+      {% include 'partials/sidebar.html' %}
+
+      <main class="main-content">
+        <header class="page-header">
+          <div>
+            <h1>Production</h1>
+            <p>Record flatbread production from flour stock.</p>
+          </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-list">
+              {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <section class="card">
+          <div class="page-actions">
+            <button class="btn-primary" type="button" onclick="openModal()">+ Add Production</button>
+          </div>
+
+          <div class="summary-row">
+            <div class="summary-card">Available Flatbread: <strong>{{ flatbread_available }}</strong></div>
+            <div class="summary-card">Flatbread Value: <strong>{{ "%.2f"|format(flatbread_value) }}</strong></div>
+            <div class="summary-card">Flatbread Rate: <strong>{{ "%.2f"|format(flatbread_rate) }}</strong></div>
+          </div>
+
+          <h2>Production History</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Flatbread</th>
+                <th>Flour Used</th>
+                <th>Rate</th>
+                <th>Total</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in transactions %}
+                <tr>
+                  <td>{{ row["created_at"] }}</td>
+                  <td>{{ row["quantity"] }}</td>
+                  <td>{{ (row["quantity"] / 20.0) | round(2) }} kg</td>
+                  <td>{{ "%.2f"|format(row["unit_price"]) }}</td>
+                  <td>{{ "%.2f"|format(row["total"]) }}</td>
+                  <td class="history-actions">
+                    <button class="edit-btn" type="button" onclick="openEditModal({{ row['id'] }})">Edit</button>
+                    <form action="{{ url_for('delete_production', transaction_id=row['id']) }}" method="post" style="display:inline;">
+                      <button class="delete-btn" type="submit" onclick="return confirm('Delete this production record?')">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="6">No production entries yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="productionModal">
+      <div class="modal-card">
+        <h3 id="modalTitle">Add Production</h3>
+        <form id="productionForm" method="post" action="{{ url_for('add_production') }}">
+          <div class="field-group">
+            <label for="productionDateInput">Date</label>
+            <input id="productionDateInput" type="date" name="production_date" value="{{ current_date }}" required>
+          </div>
+          <div class="field-group">
+            <label for="flatbreadQuantityInput">Flatbread Quantity</label>
+            <input id="flatbreadQuantityInput" type="number" name="flatbread_quantity" min="1" placeholder="Flatbread Quantity" required>
+          </div>
+          <div class="field-note">Flour cost converts automatically: 1 flour unit = 15 kg, 1 kg makes 20 flatbreads.</div>
+          <div class="field-note">Flatbread rate is computed automatically from latest flour purchase price.</div>
+          <div class="field-note">Current rate: <strong>{{ "%.2f"|format(flatbread_rate) }}</strong></div>
+          <div class="modal-actions">
+            <button class="btn-secondary" type="button" onclick="closeModal()">Cancel</button>
+            <button class="btn-primary" type="submit">Save Production</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script>
+      const modal = document.getElementById('productionModal');
+      const form = document.getElementById('productionForm');
+      const title = document.getElementById('modalTitle');
+
+      const currentDate = '{{ current_date }}';
+
+      function openModal() {
+        title.textContent = 'Add Production';
+        form.action = '{{ url_for("add_production") }}';
+        form.reset();
+        form.elements.production_date.value = currentDate;
+        modal.classList.add('open');
+      }
+
+      function closeModal() {
+        modal.classList.remove('open');
+      }
+
+      function openEditModal(id) {
+        title.textContent = 'Edit Production';
+        form.action = `/productions/${id}/edit`;
+        fetch(`/productions/${id}/edit`)
+          .then(r => r.json())
+          .then(data => {
+            form.elements.production_date.value = data.production_date ? data.production_date.split(' ')[0] : '';
+            form.elements.flatbread_quantity.value = data.flatbread_quantity || '';
+            modal.classList.add('open');
+          });
+      }
+
+      modal.addEventListener('click', function (event) {
+        if (event.target === modal) closeModal();
+      });
+    </script>
+  </body>
+</html>
