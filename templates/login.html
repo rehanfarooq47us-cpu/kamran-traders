@@ -2,47 +2,56 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=1280, initial-scale=1, viewport-fit=cover, minimum-scale=1">
     <title>Login - Kamran Traders</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   </head>
   <body>
     <div class="login-page" id="login-root">
       <div class="login-scene">
-        <div class="login-card" id="login-card">
-        <div class="login-blob"></div>
-        <h1>Welcome Back</h1>
-        <p>Please enter your details to sign in</p>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class="flash-list">
-              {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-
-        <form action="{{ url_for('login') }}" method="post" class="stack-form">
-          <div class="input-group">
-            <span class="input-icon">✉</span>
-            <input type="text" name="username" placeholder="Username" required>
+        <div class="lamp-panel" aria-hidden="true">
+          <div class="lamp-string">
+            <div class="lamp-line"></div>
+            <div class="lamp-knob"></div>
+            <span>Secure</span>
           </div>
-          <div class="input-group">
-            <span class="input-icon">🔒</span>
-            <input type="password" name="password" placeholder="Password" required>
+          <div class="lamp-shade-wrap">
+            <div class="lamp-shade"></div>
+            <div class="lamp-beam"></div>
           </div>
-          <div class="login-options">
-            <label><input type="checkbox"> Remember me</label>
-            <a href="#">Forgot Password?</a>
-          </div>
-          <button type="submit">SIGN IN</button>
-        </form>
-
-        
+          <p class="login-help">Access your trading workspace safely</p>
         </div>
 
+        <div class="login-card" id="login-card">
+          <div class="login-blob"></div>
+          <h1>Welcome Back</h1>
+          <p>Please enter your details to sign in</p>
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              <div class="flash-list">
+                {% for category, message in messages %}
+                  <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+          {% endwith %}
+
+          <form action="{{ url_for('login') }}" method="post" class="stack-form">
+            <div class="input-group">
+              <span class="input-icon">✉</span>
+              <input type="text" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+              <span class="input-icon">🔒</span>
+              <input type="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="login-options">
+              <a href="#">Forgot Password?</a>
+            </div>
+            <button type="submit">SIGN IN</button>
+          </form>
+        </div>
       </div>
     </div>
   </body>

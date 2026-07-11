@@ -66,7 +66,19 @@ function initThemeLamp() {
   });
 }
 
+function initDesktopViewMode() {
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (!viewport) return;
+
+  const isDesktopSite = navigator.userAgent.includes('Mobile') && window.innerWidth >= 1024;
+  if (isDesktopSite) {
+    viewport.setAttribute('content', 'width=1280, initial-scale=1, viewport-fit=cover, minimum-scale=1');
+    document.body.classList.add('desktop-view-mode');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileSidebar();
   initThemeLamp();
+  initDesktopViewMode();
 });

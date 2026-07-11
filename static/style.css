@@ -1031,6 +1031,35 @@ body.theme-dark .progress-row strong {
   animation: pulse 4s ease-in-out infinite;
 }
 
+@keyframes lampSwing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes lampKnobPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.16);
+  }
+}
+
+@keyframes lampBeamPulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
 .lamp-panel {
   position: relative;
   min-height: 520px;
@@ -1061,6 +1090,7 @@ body.theme-dark .progress-row strong {
   background: #9ca3af;
   transform-origin: top;
   transition: height 0.3s ease;
+  animation: lampSwing 3s ease-in-out infinite;
 }
 
 .lamp-knob {
@@ -1070,6 +1100,7 @@ body.theme-dark .progress-row strong {
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
   transition: transform 0.3s ease;
+  animation: lampKnobPulse 2.2s ease-in-out infinite;
 }
 
 .lamp-string span {
@@ -1124,6 +1155,7 @@ body.theme-dark .progress-row strong {
   clip-path: polygon(35% 0%, 65% 0%, 100% 100%, 0% 100%);
   opacity: 1;
   transition: opacity 0.35s ease, transform 0.35s ease;
+  animation: lampBeamPulse 2.6s ease-in-out infinite;
 }
 
 .login-help {

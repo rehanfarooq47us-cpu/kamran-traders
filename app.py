@@ -5,6 +5,12 @@ from datetime import datetime
 from flask import Flask, abort, flash, g, has_app_context, jsonify, redirect, render_template, request, session, url_for
 
 app = Flask(__name__)
+
+
+@app.after_request
+def add_viewport_header(response):
+    response.headers["X-View-Mode"] = "desktop"
+    return response
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret")
 DATABASE = os.path.join(app.root_path, "inventory.db")
 
