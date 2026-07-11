@@ -149,21 +149,29 @@
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
+        const togglePartyDetails = (partyId, button) => {
+          const target = document.getElementById(`ledger-details-${partyId}`);
+          if (!target) return;
+
+          const isHidden = target.hidden;
+          target.hidden = !isHidden;
+
+          if (button) {
+            button.textContent = isHidden ? 'Hide' : 'Bills';
+          }
+        };
+
         document.querySelectorAll('.ledger-bills-btn').forEach((button) => {
           button.addEventListener('click', () => {
-            const target = document.getElementById(`ledger-details-${button.getAttribute('data-party-id')}`);
-            if (target) {
-              target.hidden = !target.hidden;
-            }
+            togglePartyDetails(button.getAttribute('data-party-id'), button);
           });
         });
 
         document.querySelectorAll('.ledger-party-toggle').forEach((button) => {
           button.addEventListener('click', () => {
-            const target = document.getElementById(`ledger-details-${button.getAttribute('data-party-id')}`);
-            if (target) {
-              target.hidden = !target.hidden;
-            }
+            const partyId = button.getAttribute('data-party-id');
+            const detailsButton = document.querySelector(`.ledger-bills-btn[data-party-id="${partyId}"]`);
+            togglePartyDetails(partyId, detailsButton);
           });
         });
 
