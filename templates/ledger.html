@@ -42,7 +42,6 @@
                   <button type="button" class="ledger-party-toggle" data-party-id="{{ row['party']['party_id'] }}">
                     <div class="ledger-party-title-block">
                       <span class="ledger-party-name">{{ row['party']['party_name'] }}</span>
-                      <small>{% if view == 'customer' %}{{ row['party']['bill_count'] }} sales{% else %}{{ row['party']['bill_count'] }} purchases{% endif %}</small>
                     </div>
                     <div class="ledger-party-head-stats">
                       <span>Total: {{ "%.2f"|format(row['party']['total_value'] or 0) }}</span>
