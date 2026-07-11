@@ -918,6 +918,38 @@ def ledger_transaction_print(transaction_id):
     )
 
 
+@app.route("/ledger/customer/<int:customer_id>/delete", methods=["POST"])
+def delete_customer_ledger(customer_id):
+    init_db()
+    db = get_db()
+    customer = db.execute("SELECT id, name FROM customers WHERE id = ?", (customer_id,)).fetchone()
+    if not customer:
+        abort(404)
+
+    db.execute("DELETE FROM ledger_payments WHERE party_type = 'customer' AND party_name = ?", (customer["name"],))
+    db.execute("DELETE FROM transactions WHERE transaction_type = 'sale' AND customer_name = ?", (customer["name"],))
+    db.execute("DELETE FROM customers WHERE id = ?", (customer_id,))
+    db.commit()
+    flash("Ledger entry deleted", "success")
+    return redirect(url_for("ledger_page", view="customer"))
+
+
+@app.route("/ledger/supplier/<int:supplier_id>/delete", methods=["POST"])
+def delete_supplier_ledger(supplier_id):
+    init_db()
+    db = get_db()
+    supplier = db.execute("SELECT id, name FROM suppliers WHERE id = ?", (supplier_id,)).fetchone()
+    if not supplier:
+        abort(404)
+
+    db.execute("DELETE FROM ledger_payments WHERE party_type = 'supplier' AND party_name = ?", (supplier["name"],))
+    db.execute("DELETE FROM transactions WHERE transaction_type = 'purchase' AND supplier_name = ?", (supplier["name"],))
+    db.execute("DELETE FROM suppliers WHERE id = ?", (supplier_id,))
+    db.commit()
+    flash("Ledger entry deleted", "success")
+    return redirect(url_for("ledger_page", view="supplier"))
+
+
 @app.route("/ledger/statement/<party_type>/<int:party_id>")
 def ledger_statement_print(party_type, party_id):
     init_db()

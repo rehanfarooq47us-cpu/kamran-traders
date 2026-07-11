@@ -306,6 +306,37 @@ class SalesPurchaseAppTests(unittest.TestCase):
         self.assertIn(b"Statement", response.data)
         self.assertIn(b"Print", response.data)
 
+    def test_ledger_delete_removes_party_records(self):
+        with app.app_context():
+            db = get_db()
+            db.execute(
+                "INSERT INTO customers (name, phone, address) VALUES (?, ?, ?)",
+                ("Ali Khan", "03001234567", "Lahore"),
+            )
+            db.execute(
+                "INSERT INTO transactions (transaction_type, item_name, quantity, unit_price, total, created_at, customer_name) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                ("sale", "Flatbread", 1, 5, 5, "2026-07-01", "Ali Khan"),
+            )
+            db.execute(
+                "INSERT INTO ledger_payments (party_type, party_name, amount, payment_date, note) VALUES (?, ?, ?, ?, ?)",
+                ("customer", "Ali Khan", 2, "2026-07-01", "Advance"),
+            )
+            db.commit()
+            customer_id = db.execute("SELECT id FROM customers WHERE name = ?", ("Ali Khan",)).fetchone()[0]
+
+        response = self.client.post(f"/ledger/customer/{customer_id}/delete", follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Ledger entry deleted", response.data)
+
+        with app.app_context():
+            db = get_db()
+            customer_count = db.execute("SELECT COUNT(*) FROM customers WHERE name = ?", ("Ali Khan",)).fetchone()[0]
+            transaction_count = db.execute("SELECT COUNT(*) FROM transactions WHERE customer_name = ?", ("Ali Khan",)).fetchone()[0]
+            payment_count = db.execute("SELECT COUNT(*) FROM ledger_payments WHERE party_name = ?", ("Ali Khan",)).fetchone()[0]
+            self.assertEqual(customer_count, 0)
+            self.assertEqual(transaction_count, 0)
+            self.assertEqual(payment_count, 0)
+
     def test_sidebar_has_theme_lamp_toggle(self):
         response = self.client.get("/dashboard")
         self.assertEqual(response.status_code, 200)

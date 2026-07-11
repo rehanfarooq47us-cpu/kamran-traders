@@ -11,6 +11,15 @@
       {% include 'partials/sidebar.html' %}
 
       <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="flash flash-{{ category }}">{{ message }}</div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
         <header class="page-header">
           <div>
             <h1>Ladgure</h1>
@@ -50,6 +59,7 @@
                     </div>
                   </button>
                   <form class="ledger-print-form compact" action="{{ url_for('ledger_statement_print', party_type=view, party_id=row['party']['party_id']) }}" method="get" target="_blank">
+                    <span class="ledger-statement-label">Statement</span>
                     <input type="date" name="start_date" placeholder="Start date">
                     <input type="date" name="end_date" placeholder="End date">
                     <button type="submit" class="secondary-btn">Print</button>
@@ -60,12 +70,12 @@
                   <strong>{{ row['party']['party_name'] }}</strong>
                   <span>Total {{ "%.2f"|format(row['party']['total_value'] or 0) }} • Paid {{ "%.2f"|format(row['payment_total']) }} • Bal {{ "%.2f"|format(row['balance']) }}</span>
                 </div>
+                <div class="ledger-party-actions-row">
+                  <form action="{{ url_for('delete_customer_ledger' if view == 'customer' else 'delete_supplier_ledger', customer_id=row['party']['party_id'] if view == 'customer' else None, supplier_id=row['party']['party_id'] if view == 'supplier' else None) }}" method="post">
+                    <button type="submit" class="ledger-delete-btn" data-party-id="{{ row['party']['party_id'] }}" aria-label="Delete ledger entry">Delete</button>
+                  </form>
+                </div>
                 <div class="ledger-party-details" id="ledger-details-{{ row['party']['party_id'] }}" hidden>
-                  <div class="ledger-party-summary">
-                    <strong>Total: {{ "%.2f"|format(row['party']['total_value'] or 0) }}</strong>
-                    <strong>Payments: {{ "%.2f"|format(row['payment_total']) }}</strong>
-                    <strong>Balance: {{ "%.2f"|format(row['balance']) }}</strong>
-                  </div>
                   <div class="ledger-party-actions">
                     <span class="ledger-details-hint">Use Bills to open full details.</span>
                   </div>
