@@ -37,8 +37,8 @@
           </div>
           <div id="ledgerTable" class="ledger-list">
             {% for row in party_rows %}
-              <div class="ledger-party-card">
-                <div class="ledger-party-toggle-row">
+              <div class="ledger-party-card" id="ledger-card-{{ row['party']['party_id'] }}">
+                <div class="ledger-party-toggle-row" id="ledger-header-{{ row['party']['party_id'] }}">
                   <button type="button" class="ledger-party-toggle" data-party-id="{{ row['party']['party_id'] }}">
                     <div class="ledger-party-title-block">
                       <span class="ledger-party-name">{{ row['party']['party_name'] }}</span>

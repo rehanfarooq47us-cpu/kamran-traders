@@ -570,6 +570,10 @@ body .sidebar button {
   gap: 10px;
 }
 
+.ledger-party-details[hidden] {
+  display: none;
+}
+
 .ledger-party-summary {
   display: flex;
   flex-wrap: wrap;
