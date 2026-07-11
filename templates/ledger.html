@@ -49,6 +49,10 @@
                     <span>Bal: {{ "%.2f"|format(row['balance']) }}</span>
                   </div>
                 </button>
+                <div class="ledger-party-summary-row">
+                  <strong>{{ row['party']['party_name'] }}</strong>
+                  <span>Total {{ "%.2f"|format(row['party']['total_value'] or 0) }} • Paid {{ "%.2f"|format(row['payment_total']) }} • Bal {{ "%.2f"|format(row['balance']) }}</span>
+                </div>
                 <div class="ledger-party-details" id="ledger-details-{{ row['party']['party_id'] }}" hidden>
                   <div class="ledger-party-summary">
                     <strong>Total: {{ "%.2f"|format(row['party']['total_value'] or 0) }}</strong>

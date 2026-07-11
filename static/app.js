@@ -77,8 +77,81 @@ function initDesktopViewMode() {
   }
 }
 
+function initLoginLamp() {
+  const lampString = document.getElementById('lamp-string');
+  const lampPanel = document.getElementById('login-lamp-panel');
+  const loginCard = document.getElementById('login-card');
+  const lampLine = document.querySelector('.lamp-line');
+  const lampKnob = document.querySelector('.lamp-knob');
+  const lampBeam = document.querySelector('.lamp-beam');
+
+  if (!lampString || !lampPanel || !loginCard) return;
+
+  let isOn = true;
+  let dragging = false;
+  let dragStartY = 0;
+  let moved = false;
+
+  const setLampState = (nextState) => {
+    isOn = nextState;
+    lampPanel.classList.toggle('lamp-off', !isOn);
+    lampPanel.classList.toggle('lamp-on', isOn);
+    loginCard.classList.toggle('card-off', !isOn);
+    lampLine?.classList.toggle('lamp-off', !isOn);
+    lampKnob?.classList.toggle('lamp-off', !isOn);
+    lampBeam?.classList.toggle('lamp-off', !isOn);
+    lampString.setAttribute('aria-checked', isOn ? 'true' : 'false');
+    lampString.setAttribute('data-state', isOn ? 'on' : 'off');
+  };
+
+  const handlePointerDown = (event) => {
+    dragging = true;
+    moved = false;
+    dragStartY = event.clientY;
+    lampString.classList.add('dragging');
+  };
+
+  const handlePointerMove = (event) => {
+    if (!dragging) return;
+    const deltaY = event.clientY - dragStartY;
+    if (Math.abs(deltaY) > 24) {
+      moved = true;
+      setLampState(deltaY < 0);
+      dragStartY = event.clientY;
+    }
+  };
+
+  const handlePointerUp = () => {
+    dragging = false;
+    lampString.classList.remove('dragging');
+  };
+
+  setLampState(true);
+
+  lampString.addEventListener('pointerdown', handlePointerDown);
+  window.addEventListener('pointermove', handlePointerMove);
+  window.addEventListener('pointerup', handlePointerUp);
+  window.addEventListener('pointercancel', handlePointerUp);
+
+  lampString.addEventListener('click', (event) => {
+    if (!moved) {
+      event.preventDefault();
+      setLampState(!isOn);
+    }
+    moved = false;
+  });
+
+  lampString.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setLampState(!isOn);
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initMobileSidebar();
   initThemeLamp();
   initDesktopViewMode();
+  initLoginLamp();
 });

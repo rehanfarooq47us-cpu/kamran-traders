@@ -538,6 +538,21 @@ body .sidebar button {
   font-weight: 600;
 }
 
+.ledger-party-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px 0;
+  color: #334155;
+  font-size: 0.94rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.ledger-party-summary-row strong {
+  color: #0f172a;
+}
+
 .ledger-party-details {
   border-top: 1px solid rgba(148, 163, 184, 0.2);
   padding: 12px 16px 14px;
@@ -1017,6 +1032,7 @@ body.theme-dark .progress-row strong {
 
 .login-card.card-off {
   opacity: 0;
+  visibility: hidden;
   transform: scale(0.96) translateY(30px);
   pointer-events: none;
 }
@@ -1074,14 +1090,35 @@ body.theme-dark .progress-row strong {
   transform: translateX(6px);
 }
 
+.lamp-panel.lamp-off .lamp-beam {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.lamp-panel.lamp-off .lamp-line {
+  height: 90px;
+  background: #64748b;
+}
+
+.lamp-panel.lamp-off .lamp-knob {
+  background: #94a3b8;
+  box-shadow: none;
+}
+
 .lamp-string {
   position: relative;
-  cursor: pointer;
+  cursor: grab;
   z-index: 20;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 14px;
+  outline: none;
+}
+
+.lamp-string.dragging {
+  cursor: grabbing;
+  transform: scale(1.02);
 }
 
 .lamp-line {

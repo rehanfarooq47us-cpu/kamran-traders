@@ -9,8 +9,8 @@
   <body>
     <div class="login-page" id="login-root">
       <div class="login-scene">
-        <div class="lamp-panel" aria-hidden="true">
-          <div class="lamp-string">
+        <div class="lamp-panel lamp-on" id="login-lamp-panel" aria-hidden="true">
+          <div class="lamp-string" id="lamp-string" role="switch" aria-checked="true" tabindex="0">
             <div class="lamp-line"></div>
             <div class="lamp-knob"></div>
             <span>Secure</span>
@@ -54,5 +54,6 @@
         </div>
       </div>
     </div>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
   </body>
 </html>
