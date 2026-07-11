@@ -92,6 +92,34 @@ class SalesPurchaseAppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("/sales/receipt/", response.headers["Location"])
 
+    def test_sales_page_shows_available_flatbread_card_and_limits_sales(self):
+        with app.app_context():
+            db = get_db()
+            db.execute("INSERT INTO inventory (item_name, quantity_on_hand, last_purchase_price, last_sale_price) VALUES (?, ?, ?, ?)", ("Flatbread", 5, 5, 0))
+            db.commit()
+
+        response = self.client.get("/sales")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Available Flatbread", response.data)
+
+        sale_response = self.client.post(
+            "/sales",
+            data={
+                "customer_name": "Ali",
+                "item_name": "Flatbread",
+                "quantity": 6,
+                "unit_price": 5,
+            },
+            follow_redirects=True,
+        )
+        self.assertEqual(sale_response.status_code, 200)
+        self.assertIn(b"Not enough stock available for this sale", sale_response.data)
+
+        with app.app_context():
+            db = get_db()
+            sale_count = db.execute("SELECT COUNT(*) FROM transactions WHERE transaction_type = 'sale'").fetchone()[0]
+            self.assertEqual(sale_count, 0)
+
     def test_customer_and_supplier_detail_pages_show_records(self):
         with app.app_context():
             db = get_db()
@@ -203,6 +231,26 @@ class SalesPurchaseAppTests(unittest.TestCase):
             supplier_payment = db.execute("SELECT COUNT(*) FROM ledger_payments WHERE party_type = 'supplier' AND party_name = ?", ("ABC Traders",)).fetchone()[0]
             self.assertEqual(customer_payment, 1)
             self.assertEqual(supplier_payment, 1)
+
+    def test_ledger_statement_print_supports_date_range_filter(self):
+        with app.app_context():
+            db = get_db()
+            cursor = db.execute("INSERT INTO customers (name, phone, address) VALUES (?, ?, ?)", ("Ali Khan", "03001234567", "Lahore"))
+            customer_id = cursor.lastrowid
+            db.execute(
+                "INSERT INTO transactions (transaction_type, item_name, quantity, unit_price, total, created_at, customer_name, supplier_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                ("sale", "Rice", 2, 120, 240, "2026-07-01", "Ali Khan", None),
+            )
+            db.execute(
+                "INSERT INTO transactions (transaction_type, item_name, quantity, unit_price, total, created_at, customer_name, supplier_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                ("sale", "Wheat", 1, 80, 80, "2026-07-03", "Ali Khan", None),
+            )
+            db.commit()
+
+        response = self.client.get(f"/ledger/statement/customer/{customer_id}?start_date=2026-07-01&end_date=2026-07-02")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Rice", response.data)
+        self.assertNotIn(b"Wheat", response.data)
 
     def test_ledger_view_toggle_and_customer_detail_data(self):
         with app.app_context():

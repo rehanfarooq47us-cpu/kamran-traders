@@ -56,7 +56,11 @@
                     <strong>Balance: {{ "%.2f"|format(row['balance']) }}</strong>
                   </div>
                   <div class="ledger-party-actions">
-                    <a class="secondary-btn" href="{{ url_for('ledger_statement_print', party_type=view, party_id=row['party']['party_id']) }}" target="_blank">Statement</a>
+                    <form class="ledger-print-form" action="{{ url_for('ledger_statement_print', party_type=view, party_id=row['party']['party_id']) }}" method="get" target="_blank">
+                      <input type="date" name="start_date" placeholder="Start date">
+                      <input type="date" name="end_date" placeholder="End date">
+                      <button type="submit" class="secondary-btn">Print</button>
+                    </form>
                   </div>
                   {% for entry in row['entries'] %}
                     <div class="ledger-bill-row {% if entry['kind'] == 'payment' %}ledger-payment-row{% endif %}">

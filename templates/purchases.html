@@ -55,6 +55,7 @@
             <div class="summary-card">Total Flour Units: <strong>{{ flour_total_units }}</strong></div>
             <div class="summary-card">Total Flour Kgs: <strong>{{ flour_total_kgs }}</strong></div>
             <div class="summary-card">Flour Amount: <strong>{{ "%.2f"|format(flour_total_amount) }}</strong></div>
+            <div class="summary-card">Remaining Flour: <strong>{{ "%.2f"|format(remaining_flour_kgs) }} kg</strong><br><span class="helper-text">Value: {{ "%.2f"|format(remaining_flour_value) }}</span></div>
           </div>
 
           <h2>Recent Purchases</h2>
@@ -125,7 +126,8 @@
           </div>
           <div class="field-group">
             <label for="itemNameInput">Item Name</label>
-            <input id="itemNameInput" type="text" name="item_name" placeholder="Item Name" required>
+            <input id="itemNameInput" type="text" name="item_name" value="Flour" readonly>
+            <small class="field-note">Purchases are recorded as Flour by default.</small>
           </div>
           <div class="field-group">
             <label for="quantityInput">Quantity</label>
@@ -181,6 +183,7 @@
         form.action = '{{ url_for("add_purchase") }}';
         form.reset();
         form.elements.purchase_date.value = currentDate;
+        form.elements.item_name.value = 'Flour';
         priceConversionText.textContent = 'Enter item name Flour to see kg and flatbread rates.';
         modal.classList.add('open');
       }
@@ -198,7 +201,7 @@
             form.elements.purchase_date.value = data.created_at ? data.created_at.split(' ')[0] : '';
             form.elements.bill_number.value = data.bill_number || '';
             form.elements.supplier_name.value = data.supplier_name || '';
-            form.elements.item_name.value = data.item_name || '';
+            form.elements.item_name.value = data.item_name || 'Flour';
             form.elements.quantity.value = data.quantity || '';
             form.elements.unit_price.value = data.unit_price || '';
             form.elements.note.value = data.note || '';

@@ -62,6 +62,7 @@
           <div class="summary-row">
             <div class="summary-card">Total Sales Amount: <strong>{{ "%.2f"|format(total_sales_amount) }}</strong></div>
             <div class="summary-card">Total Sales Count: <strong>{{ transactions|length }}</strong></div>
+            <div class="summary-card">Available Flatbread: <strong>{{ flatbread_available }}</strong><br><span class="helper-text">Value: {{ "%.2f"|format(flatbread_value) }}</span></div>
           </div>
 
           <div class="search-row">
@@ -130,8 +131,8 @@
           </div>
           <div class="field-group">
             <label for="quantityInput">Quantity</label>
-            <input type="number" name="quantity" id="quantityInput" min="1" placeholder="Quantity" required>
-            <small class="field-note">Quantity selected here will update total automatically.</small>
+            <input type="number" name="quantity" id="quantityInput" min="1" max="{{ flatbread_available }}" placeholder="Quantity" required>
+            <small class="field-note">Quantity selected here will update total automatically. Available stock: {{ flatbread_available }}</small>
           </div>
           <div class="field-group">
             <label for="unitPriceInput">Unit Price</label>
@@ -207,6 +208,8 @@
       function openModal() {
         saleForm.reset();
         saleForm.elements.sale_date.value = currentDate;
+        saleForm.elements.item_name.value = 'Flatbread';
+        saleForm.elements.quantity.max = '{{ flatbread_available }}';
         saleModal.classList.add('open');
       }
 

@@ -43,73 +43,7 @@
         
         </div>
 
-        <div class="lamp-panel" id="lamp-panel">
-          <div class="lamp-string" id="lamp-toggle">
-            <div class="lamp-line" id="lamp-line"></div>
-            <div class="lamp-knob" id="lamp-knob"></div>
-            <span id="lamp-label">Pull to Turn Off</span>
-          </div>
-
-          <div class="lamp-shade-wrap">
-            <div class="lamp-shade"></div>
-            <div class="lamp-beam" id="lamp-beam"></div>
-          </div>
-        </div>
       </div>
     </div>
-
-    <script>
-      let isOn = true;
-      let isDragging = false;
-      const root = document.getElementById('login-root');
-      const card = document.getElementById('login-card');
-      const panel = document.getElementById('lamp-panel');
-      const line = document.getElementById('lamp-line');
-      const knob = document.getElementById('lamp-knob');
-      const beam = document.getElementById('lamp-beam');
-      const label = document.getElementById('lamp-label');
-      const toggle = document.getElementById('lamp-toggle');
-      const inputs = card.querySelectorAll('input, button, a');
-
-      function setLampState(on) {
-        isOn = on;
-        root.classList.toggle('lamp-off', !isOn);
-        card.classList.toggle('card-off', !isOn);
-        line.style.height = isOn ? '140px' : '160px';
-        knob.style.transform = isOn ? 'translateY(0)' : 'translateY(5px)';
-        beam.style.opacity = isOn ? '1' : '0';
-        beam.style.transform = isOn ? 'scaleY(1)' : 'scaleY(0.2)';
-        label.textContent = isOn ? 'Pull to Turn Off' : 'Pull to Turn On';
-        inputs.forEach((el) => {
-          if (el.tagName === 'INPUT' || el.tagName === 'BUTTON' || el.tagName === 'A') {
-            el.disabled = !isOn;
-            if (el.tagName === 'INPUT') {
-              el.classList.toggle('disabled-input', !isOn);
-            }
-          }
-        });
-      }
-
-      function toggleLamp() {
-        setLampState(!isOn);
-      }
-
-      toggle.addEventListener('mousedown', () => { isDragging = true; });
-      document.addEventListener('mousemove', (event) => {
-        if (!isDragging) return;
-        const deltaY = event.clientY - toggle.getBoundingClientRect().top;
-        if (deltaY > 90) {
-          setLampState(false);
-          isDragging = false;
-        } else if (deltaY < -20) {
-          setLampState(true);
-          isDragging = false;
-        }
-      });
-      document.addEventListener('mouseup', () => { isDragging = false; });
-      toggle.addEventListener('click', () => { if (!isDragging) toggleLamp(); });
-      panel.addEventListener('mouseenter', () => { panel.classList.add('lamp-hover'); });
-      panel.addEventListener('mouseleave', () => { panel.classList.remove('lamp-hover'); });
-    </script>
   </body>
 </html>

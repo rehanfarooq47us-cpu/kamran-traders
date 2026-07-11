@@ -382,6 +382,9 @@ def sales_page():
         "SELECT id, name FROM customers ORDER BY name"
     ).fetchall()
     flatbread_rate = get_flatbread_rate(db)
+    flatbread_item = get_inventory_item(db, "Flatbread")
+    flatbread_available = float(flatbread_item["quantity_on_hand"] or 0) if flatbread_item else 0.0
+    flatbread_value = round(flatbread_available * flatbread_rate, 2)
     current_date = datetime.utcnow().strftime("%Y-%m-%d")
     total_sales_amount = sum(float(row["total"] or 0) for row in transactions)
     total_sales_quantity = sum(int(row["quantity"] or 0) for row in transactions)
@@ -390,6 +393,8 @@ def sales_page():
         transactions=transactions,
         customers=customers,
         flatbread_rate=flatbread_rate,
+        flatbread_available=flatbread_available,
+        flatbread_value=flatbread_value,
         total_sales_amount=total_sales_amount,
         total_sales_quantity=total_sales_quantity,
         current_date=current_date,
@@ -481,7 +486,11 @@ def add_sale():
         return redirect(url_for("sales_page"))
 
     db = get_db()
-    inventory_item = get_inventory_item(db, item_name)
+    if normalize_item_name(item_name).lower() == "flatbread":
+        inventory_item = get_inventory_item(db, "Flatbread")
+    else:
+        inventory_item = get_inventory_item(db, item_name)
+
     if not inventory_item or float(inventory_item["quantity_on_hand"] or 0) < quantity:
         flash("Not enough stock available for this sale", "error")
         return redirect(url_for("sales_page"))
@@ -908,6 +917,8 @@ def ledger_statement_print(party_type, party_id):
     init_db()
     db = get_db()
     party_type = party_type.lower()
+    start_date = request.args.get("start_date", "").strip()
+    end_date = request.args.get("end_date", "").strip()
 
     if party_type == "customer":
         party = db.execute(
@@ -942,9 +953,34 @@ def ledger_statement_print(party_type, party_id):
         ).fetchall()
         label = "Total Purchase"
 
+    def is_within_range(entry_date):
+        if not entry_date:
+            return True
+        try:
+            date_value = datetime.strptime(entry_date.split(" ")[0], "%Y-%m-%d")
+        except ValueError:
+            return True
+        if start_date:
+            try:
+                start_value = datetime.strptime(start_date, "%Y-%m-%d")
+            except ValueError:
+                start_value = None
+            if start_value and date_value < start_value:
+                return False
+        if end_date:
+            try:
+                end_value = datetime.strptime(end_date, "%Y-%m-%d")
+            except ValueError:
+                end_value = None
+            if end_value and date_value > end_value:
+                return False
+        return True
+
     entries = []
     total_value = 0.0
     for transaction in transactions:
+        if not is_within_range(transaction["created_at"]):
+            continue
         total_value += float(transaction["total"] or 0)
         entries.append({
             "kind": "transaction",
@@ -958,6 +994,8 @@ def ledger_statement_print(party_type, party_id):
 
     payment_total = 0.0
     for payment in payments:
+        if not is_within_range(payment["payment_date"]):
+            continue
         payment_total += float(payment["amount"] or 0)
         entries.append({
             "kind": "payment",
@@ -979,6 +1017,8 @@ def ledger_statement_print(party_type, party_id):
         payment_total=round(payment_total, 2),
         balance=round(total_value - payment_total, 2),
         label=label,
+        start_date=start_date,
+        end_date=end_date,
     )
 
 
@@ -1156,6 +1196,11 @@ def purchases_page():
     flour_total_units = sum(int(row["quantity"]) for row in transactions if row["item_name"] and row["item_name"].strip().lower() == "flour")
     flour_total_kgs = sum(int(row["quantity"]) * KG_PER_PURCHASE_UNIT for row in transactions if row["item_name"] and row["item_name"].strip().lower() == "flour")
     flour_total_amount = sum(float(row["total"] or 0) for row in transactions if row["item_name"] and row["item_name"].strip().lower() == "flour")
+    flour_item = get_inventory_item(db, "Flour")
+    remaining_flour_kgs = float(flour_item["quantity_on_hand"] or 0) if flour_item else 0.0
+    flour_rate = get_latest_flour_purchase_price(db)
+    remaining_flour_value = round(remaining_flour_kgs * flour_rate, 2) if flour_rate > 0 else 0.0
+    current_date = datetime.utcnow().strftime("%Y-%m-%d")
     return render_template(
         "purchases.html",
         transactions=transactions,
@@ -1163,13 +1208,16 @@ def purchases_page():
         flour_total_units=flour_total_units,
         flour_total_kgs=flour_total_kgs,
         flour_total_amount=flour_total_amount,
+        remaining_flour_kgs=remaining_flour_kgs,
+        remaining_flour_value=remaining_flour_value,
+        current_date=current_date,
     )
 
 
 @app.route("/purchases", methods=["POST"])
 def add_purchase():
     init_db()
-    item_name = normalize_item_name(request.form.get("item_name", "").strip())
+    item_name = "Flour"
     quantity = int(request.form.get("quantity", 0))
     unit_price = float(request.form.get("unit_price", 0))
     supplier_name = request.form.get("supplier_name", "").strip()
@@ -1219,7 +1267,7 @@ def edit_purchase(transaction_id):
         return redirect(url_for("purchases_page"))
 
     if request.method == "POST":
-        item_name = normalize_item_name(request.form.get("item_name", "").strip())
+        item_name = "Flour"
         quantity = int(request.form.get("quantity", 0))
         unit_price = float(request.form.get("unit_price", 0))
         supplier_name = request.form.get("supplier_name", "").strip()

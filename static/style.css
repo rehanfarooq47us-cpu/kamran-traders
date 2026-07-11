@@ -498,6 +498,11 @@ body .sidebar button {
   color: #0f172a;
   font-weight: 600;
   cursor: pointer;
+  border-radius: 0;
+}
+
+.ledger-party-toggle:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.12), rgba(56, 189, 248, 0.08));
 }
 
 .ledger-party-title-block {
@@ -554,6 +559,21 @@ body .sidebar button {
 .ledger-party-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ledger-print-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ledger-print-form input {
+  min-width: 140px;
+  max-width: 180px;
 }
 
 .ledger-empty {
@@ -1548,6 +1568,16 @@ button:active {
   .ledger-party-head-stats {
     justify-content: flex-start;
   }
+
+  .ledger-print-form {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .ledger-print-form input {
+    width: 100%;
+    max-width: none;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1599,6 +1629,10 @@ button:active {
 
   .login-card {
     padding: 20px;
+  }
+
+  .ledger-party-card {
+    border-radius: 16px;
   }
 
   .ledger-modal {
