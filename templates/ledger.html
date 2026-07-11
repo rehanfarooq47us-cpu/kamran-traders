@@ -38,17 +38,25 @@
           <div id="ledgerTable" class="ledger-list">
             {% for row in party_rows %}
               <div class="ledger-party-card">
-                <button type="button" class="ledger-party-toggle" data-party-id="{{ row['party']['party_id'] }}">
-                  <div class="ledger-party-title-block">
-                    <span class="ledger-party-name">{{ row['party']['party_name'] }}</span>
-                    <small>{% if view == 'customer' %}{{ row['party']['bill_count'] }} sales{% else %}{{ row['party']['bill_count'] }} purchases{% endif %}</small>
-                  </div>
-                  <div class="ledger-party-head-stats">
-                    <span>Total: {{ "%.2f"|format(row['party']['total_value'] or 0) }}</span>
-                    <span>Paid: {{ "%.2f"|format(row['payment_total']) }}</span>
-                    <span>Bal: {{ "%.2f"|format(row['balance']) }}</span>
-                  </div>
-                </button>
+                <div class="ledger-party-toggle-row">
+                  <button type="button" class="ledger-party-toggle" data-party-id="{{ row['party']['party_id'] }}">
+                    <div class="ledger-party-title-block">
+                      <span class="ledger-party-name">{{ row['party']['party_name'] }}</span>
+                      <small>{% if view == 'customer' %}{{ row['party']['bill_count'] }} sales{% else %}{{ row['party']['bill_count'] }} purchases{% endif %}</small>
+                    </div>
+                    <div class="ledger-party-head-stats">
+                      <span>Total: {{ "%.2f"|format(row['party']['total_value'] or 0) }}</span>
+                      <span>Paid: {{ "%.2f"|format(row['payment_total']) }}</span>
+                      <span>Bal: {{ "%.2f"|format(row['balance']) }}</span>
+                    </div>
+                  </button>
+                  <form class="ledger-print-form compact" action="{{ url_for('ledger_statement_print', party_type=view, party_id=row['party']['party_id']) }}" method="get" target="_blank">
+                    <input type="date" name="start_date" placeholder="Start date">
+                    <input type="date" name="end_date" placeholder="End date">
+                    <button type="submit" class="secondary-btn">Print</button>
+                  </form>
+                  <button type="button" class="secondary-btn ledger-bills-btn" data-party-id="{{ row['party']['party_id'] }}">Bills</button>
+                </div>
                 <div class="ledger-party-summary-row">
                   <strong>{{ row['party']['party_name'] }}</strong>
                   <span>Total {{ "%.2f"|format(row['party']['total_value'] or 0) }} • Paid {{ "%.2f"|format(row['payment_total']) }} • Bal {{ "%.2f"|format(row['balance']) }}</span>
@@ -60,11 +68,7 @@
                     <strong>Balance: {{ "%.2f"|format(row['balance']) }}</strong>
                   </div>
                   <div class="ledger-party-actions">
-                    <form class="ledger-print-form" action="{{ url_for('ledger_statement_print', party_type=view, party_id=row['party']['party_id']) }}" method="get" target="_blank">
-                      <input type="date" name="start_date" placeholder="Start date">
-                      <input type="date" name="end_date" placeholder="End date">
-                      <button type="submit" class="secondary-btn">Print</button>
-                    </form>
+                    <span class="ledger-details-hint">Use Bills to open full details.</span>
                   </div>
                   {% for entry in row['entries'] %}
                     <div class="ledger-bill-row {% if entry['kind'] == 'payment' %}ledger-payment-row{% endif %}">
@@ -146,6 +150,15 @@
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script>
       document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.ledger-bills-btn').forEach((button) => {
+          button.addEventListener('click', () => {
+            const target = document.getElementById(`ledger-details-${button.getAttribute('data-party-id')}`);
+            if (target) {
+              target.hidden = !target.hidden;
+            }
+          });
+        });
+
         document.querySelectorAll('.ledger-party-toggle').forEach((button) => {
           button.addEventListener('click', () => {
             const target = document.getElementById(`ledger-details-${button.getAttribute('data-party-id')}`);
